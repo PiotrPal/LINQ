@@ -21,16 +21,26 @@ namespace Funkcje {
                 new Pracownik { ID = 7, Name = "Marek", Surname = "Piatek"}
             };
 
-            //Console.WriteLine(NaszLinq.Count(programisci));
+            //###metoda nazwana
+            //foreach (var osoba in programisci.Where(RozpoczynaM) ){
+            //    Console.WriteLine(osoba.Name);
+            //}
 
-            Console.WriteLine(programisci.Count());
-            Console.WriteLine(kierowcy.Count());
+            //###metoda anonimowa
+            //foreach (var osoba in programisci.Where(delegate (Pracownik pracownik) {
+            //    return pracownik.Name.StartsWith("A");
+            //})) {
+            //    Console.WriteLine(osoba.Name);
+            //}
 
-            IEnumerator<Pracownik> enumerator = kierowcy.GetEnumerator();
-
-            while (enumerator.MoveNext()) {
-                Console.WriteLine(enumerator.Current.Name);
+            //###lambda
+            foreach (var osoba in programisci.Where(p => p.Name.StartsWith("M"))) {
+                Console.WriteLine(osoba.Name);
             }
+        }
+
+        private static bool RozpoczynaM(Pracownik pracownik) {
+            return pracownik.Name.StartsWith("M");
         }
     }
 }
