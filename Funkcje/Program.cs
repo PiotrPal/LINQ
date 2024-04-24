@@ -1,7 +1,8 @@
-﻿using System;
+﻿//using _Funkcje;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-//using System.Linq;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,11 +21,10 @@ namespace Funkcje {
                 new Pracownik { ID = 7, Name = "Marek", Surname = "Piatek"}
             };
 
-            //foreach (var item in kierowcy) {
-            //    Console.WriteLine($"{item.ID, -3} {item.Name,-7} {item.Surname}");
-            //}
+            //Console.WriteLine(NaszLinq.Count(programisci));
 
-            //kierowcy.GetEnumerator();
+            Console.WriteLine(programisci.Count());
+            Console.WriteLine(kierowcy.Count());
 
             IEnumerator<Pracownik> enumerator = kierowcy.GetEnumerator();
 
