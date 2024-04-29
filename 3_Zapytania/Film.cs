@@ -12,6 +12,7 @@ namespace _3_Zapytania {
         private int _rok;
         public int Rok {
             get {
+                //throw new Exception("Error!!"); //temp
                 Console.WriteLine($"Zwaraca {_rok} i {Tytul}");
                 return _rok;
             }

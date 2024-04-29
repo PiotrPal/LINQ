@@ -6,8 +6,15 @@ namespace _3_Zapytania {
         public static IEnumerable<T> Filtr<T>(this IEnumerable<T> zrodlo, Func<T,bool> predicate) {
             foreach (var item in zrodlo) {
                 if (predicate(item)) {
-                    yield return item; 
+                    yield return item;
                 }
+            }
+        }
+        public static IEnumerable<double> LiczbyLosowe() {
+            var losowa = new Random();
+
+            while (true) {
+               yield return losowa.NextDouble();
             }
         }
     }
