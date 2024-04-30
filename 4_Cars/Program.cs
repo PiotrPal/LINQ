@@ -13,25 +13,24 @@ namespace _4_Cars {
             var query = samochody
                 .Where(s => s.Producent == "xddd" && s.Rok == 2018)
                 .OrderByDescending(s => s.SpalanieAutostrada)
-                .ThenBy(s => s.Producent)
+                .ThenBy(s => s.Producent);
                 //.First(); jak nie ma pasujacego to sie wywali 
-                .FirstOrDefault();
+                //.FirstOrDefault();
 
-            var query2 = from car in samochody
-                         where car.Producent == "Audi" && car.Rok == 2018
-                         orderby car.SpalanieAutostrada descending, car.Producent ascending
-                         select car;
+            var query2 = samochody.Contains<Samochod>(samochody[5]);
+
+            Console.WriteLine(query2);
 
             //query = query.Reverse();
 
-            foreach (var car in query2.Take(10)) {
+            foreach (var car in query.Take(10)) {
                 //Console.WriteLine(car.Rok);
                 Console.WriteLine(car.Producent + " " + car.Model + " " + car.SpalanieAutostrada + " " + car.Rok);
             }
 
-            if (query != null) {
-                Console.WriteLine("\n" + query.Producent + " " + query.Model);
-            }
+            //if (query != null) {
+            //    Console.WriteLine("\n" + query.Producent + " " + query.Model);
+            //}
         }
 
         private static List<Samochod> WczytywanieZpliku2(string path) {
