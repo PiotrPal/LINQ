@@ -47,7 +47,7 @@ namespace _4_Cars {
 
                 // Console.WriteLine(car.Producent + " " + car.Siedziba + " " + car.Model + " " + car.SpalanieAutostrada); // wersja 1
                 //Console.WriteLine(car.producent.Siedziba, car.samochod.Model, car.samochod.Producent, car.samochod.SpalanieAutostrada); // bez selecta
-                Console.WriteLine(car.Siedziba, car.Model, car.Producent, car.SpalanieAutostrada); // wersja 2
+                Console.WriteLine(car.Siedziba + " " + car.Model + " " + car.Producent + " " + car.SpalanieAutostrada); // wersja 2
 
             }
 
