@@ -8,62 +8,69 @@ using System.Threading.Tasks;
 namespace _4_Cars {
     class Program {
         static void Main(string[] args) {
-            var samochody = WczytywanieZpliku("paliwo.csv");
+            var samochody = WczytywanieSamochodu("paliwo.csv");
+            var producenci = WczytywanieProducenci("producent.csv");
 
             var query = samochody
-                .Where(s => s.Producent == "Audi" && s.Rok == 2018)
-                .OrderByDescending(s => s.SpalanieAutostrada)
-                .ThenBy(s => s.Producent)
-                .Select(s => new { s.Producent, s.Model, s.SpalanieAutostrada });
-            //.First(); jak nie ma pasujacego to sie wywali 
-            //.FirstOrDefault();
+                .Join(producenci,
+                    s => s.Producent,
+                    p => p.Nazwa,
+                    (s, p) => new {
+                        //p.Siedziba,   // wersja1
+                        //s.Model,
+                        //s.SpalanieAutostrada,
+                        //s.Producent,
+                        samochod = s,
+                        producent = p
+                    })
+                .OrderByDescending(x => x.samochod.SpalanieAutostrada)
+                .ThenBy(x => x.samochod.Producent)
+                .Select(x => new { // wersja2
+                    x.producent.Siedziba,
+                    x.samochod.Producent,
+                    x.samochod.Model,
+                    x.samochod.SpalanieAutostrada
+                });
+                //.Select(x => new { x.Siedziba, x.Producent, x.Model, x.SpalanieAutostrada }); // wersja1
 
-            //var zapytanie = from samochod in samochody
-            //                where samochod.Producent == "Audi" && samochod.Rok == 2018
-            //                orderby samochod.SpalanieAutostrada descending, samochod.Producent ascending
-            //                select new {
-            //                    samochod.Producent,
-            //                    samochod.Model,
-            //                    samochod.SpalanieAutostrada
-            //                };
-
-            //var query2 = samochody.Contains<Samochod>(samochody[5]);
-
-            //Console.WriteLine(query2);
-
-            //query = query.Reverse();
+            var query2 = from samochod in samochody
+                         join producent in producenci on samochod.Producent equals producent.Nazwa
+                         orderby samochod.SpalanieAutostrada descending, samochod.Producent ascending
+                         select new {
+                             producent.Siedziba,
+                             samochod.Model,
+                             samochod.SpalanieAutostrada,
+                             samochod.Producent
+                         };
 
             foreach (var car in query.Take(10)) {
-                //Console.WriteLine(car.Rok);
-                Console.WriteLine(car.Producent + " " + car.Model + " " + car.SpalanieAutostrada);
+
+                // Console.WriteLine(car.Producent + " " + car.Siedziba + " " + car.Model + " " + car.SpalanieAutostrada); // wersja 1
+                //Console.WriteLine(car.producent.Siedziba, car.samochod.Model, car.samochod.Producent, car.samochod.SpalanieAutostrada); // bez selecta
+                Console.WriteLine(car.Siedziba, car.Model, car.Producent, car.SpalanieAutostrada); // wersja 2
+
             }
 
-
-            var zapytanie2 = samochody
-                .SelectMany(s => s.Producent)
-                .OrderBy(s => s);
-
-            foreach (var litera in zapytanie2) {
-                Console.WriteLine("# " + litera);
-                //Console.WriteLine("=> "+ producent);
-            }
-
-            //if (query != null) {
-            //    Console.WriteLine("\n" + query.Producent + " " + query.Model);
-            //}
         }
 
-        //private static List<Samochod> WczytywanieZpliku2(string path) {
-        //    return (from line in File.ReadAllLines(path).Skip(1)
-        //            where line.Length > 1
-        //            select Samochod.ParseCSV(line)).ToList();
-        //}
+        private static List<Producent> WczytywanieProducenci(string path) {
+            var query = File.ReadAllLines(path)
+                .Where(p => p.Length > 1)
+                .Select(p => {
+                    var kolumny = p.Split(',');
+                    return new Producent {
+                        Nazwa = kolumny[0],
+                        Siedziba = kolumny[1],
+                        Rok = int.Parse(kolumny[2])
+                    };
+                });
+            return query.ToList();
+        }
 
-        private static List<Samochod> WczytywanieZpliku(string path) {
+        private static List<Samochod> WczytywanieSamochodu(string path) {
             var test = File.ReadAllLines(path)
                 .Skip(1)
                 .Where(line => line.Length > 1)
-                //.Select(Samochod.ParseCSV);
                 .WSamochod();
             return test.ToList();
         }
@@ -73,7 +80,7 @@ namespace _4_Cars {
         public static IEnumerable<Samochod> WSamochod(this IEnumerable<string> zrodlo) {
 
             foreach (var line in zrodlo) {
-                
+
                 var kolumny = line.Split(',');
 
                 yield return new Samochod {
