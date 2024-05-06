@@ -11,48 +11,51 @@ namespace _4_Cars {
             var samochody = WczytywanieSamochodu("paliwo.csv");
             var producenci = WczytywanieProducenci("producent.csv");
 
-            var query = samochody
-                .Join(producenci,
-                    //s => s.Producent,
-                    //p => p.Nazwa,
-                    s => new { s.Producent, s.Rok },
-                    p => new { Producent = p.Nazwa, p.Rok },
-            (s, p) => new {
-                //p.Siedziba,   // wersja1
-                //s.Model,
-                //s.SpalanieAutostrada,
-                //s.Producent,
-                samochod = s,
-                producent = p
-            })
-                .OrderByDescending(x => x.samochod.SpalanieAutostrada)
-                .ThenBy(x => x.samochod.Producent)
-                .Select(x => new { // wersja2
-                    x.producent.Siedziba,
-                    x.samochod.Producent,
-                    x.samochod.Model,
-                    x.samochod.SpalanieAutostrada
-                });
-            //.Select(x => new { x.Siedziba, x.Producent, x.Model, x.SpalanieAutostrada }); // wersja1
+            var query = from samochod in samochody
+                        group samochod by samochod.Producent.ToUpper() into producent
+                        orderby producent.Key
+                        select producent;
 
-            var query2 = from samochod in samochody
-                         join producent in producenci
-                         on new { samochod.Producent, samochod.Rok }
-                         equals new { Producent = producent.Nazwa, producent.Rok }
-                         orderby samochod.SpalanieAutostrada descending, samochod.Producent ascending
+            var query2 = samochody.GroupBy(s => s.Producent.ToUpper())
+                .OrderBy(g => g.Key);
+
+            //var query69 = samochody.Select(s => s.Producent);
+            //var query70 = samochody.GroupBy(s => s.Producent);
+
+            var query3 = from producent in producenci
+                         join samochod in samochody
+                         on producent.Nazwa equals samochod.Producent into samochodGrupa
+                         orderby producent.Siedziba
                          select new {
-                             producent.Siedziba,
-                             samochod.Model,
-                             samochod.SpalanieAutostrada,
-                             samochod.Producent
-                         };
+                             Producent = producent,
+                             Samochody = samochodGrupa
+                         } into wynik
+                         group wynik by wynik.Producent.Siedziba;
 
-            foreach (var car in query.Take(10)) {
-                // Console.WriteLine(car.Producent + " " + car.Siedziba + " " + car.Model + " " + car.SpalanieAutostrada); // wersja 1
-                //Console.WriteLine(car.producent.Siedziba, car.samochod.Model, car.samochod.Producent, car.samochod.SpalanieAutostrada); // bez selecta
-                Console.WriteLine(car.Siedziba + " " + car.Model + " " + car.Producent + " " + car.SpalanieAutostrada); // wersja 2
+            var query4 = producenci.GroupJoin(samochody, p => p.Nazwa, s => s.Producent,
+                (p,g) => new {
+                    Producent = p, 
+                    Samochody = g
+                }).OrderBy(p => p.Producent.Siedziba) 
+                .GroupBy(g => g.Producent.Siedziba);
 
+
+            foreach (var grupa in query4) {
+                //Console.WriteLine($"{ item.Key } ma { item.Count() } samochodow");
+
+                Console.WriteLine($"{grupa.Key}");
+
+                foreach (var car in grupa.SelectMany(g => g.Samochody)
+                    .OrderByDescending(c => c.SpalanieAutostrada).Take(3)) {
+                    Console.WriteLine($"\t{car.Model} : {car.SpalanieAutostrada}");
+                }
             }
+
+            //foreach (var car in query70) {
+            //    Console.WriteLine(car.Key);
+            //}
+
+
 
         }
 
