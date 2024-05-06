@@ -2,60 +2,96 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace _4_Cars {
     class Program {
         static void Main(string[] args) {
-            var samochody = WczytywanieSamochodu("paliwo.csv");
-            var producenci = WczytywanieProducenci("producent.csv");
+            TworzenieXML();
+            ZapytanieXML();
+            Console.WriteLine("\t -----");
+            ZapytanieXML2();
+        }
 
-            var query = from car in samochody
-                        group car by car.Producent into samochodGrupa
-                        select new {
-                            Nazwa = samochodGrupa.Key,
-                            Max = samochodGrupa.Max(s => s.SpalanieAutostrada),
-                            Min = samochodGrupa.Min(s => s.SpalanieAutostrada),
-                            Avg = samochodGrupa.Average(s => s.SpalanieAutostrada)
-                        } into wynik
-                        orderby wynik.Max descending
-                        select wynik;
+        private static void ZapytanieXML2() {
+            var dokument = XDocument.Load("paliwo.xml");
+            var query = dokument
+                //.Descendants("Samochod") 
+                .Element("Samochody")
+                .Elements("Samochod")
+                .Where(s => s.Attribute("Producent")?.Value == "Ferrari") //? <- bezpieczneij bo nie wywali wyjatku
+                .Select(s => new {
+                    Model = s.Attribute("Model").Value,
+                    Producent = s.Attribute("Producent").Value
+                });
 
-            var query2 = samochody.GroupBy(s => s.Producent)
-                .Select(g => {
-                    return new {
-                        Nazwa = g.Key,
-                        Max = g.Max(s => s.SpalanieAutostrada),
-                        Min = g.Min(s => s.SpalanieAutostrada),
-                        Avg = g.Average(s => s.SpalanieAutostrada)
-                    };
-                }).OrderByDescending( g => g.Max);
-
-            var query3 = from producent in producenci
-                         join samochod in samochody
-                         on producent.Nazwa equals samochod.Producent into samochodGrupa
-                         orderby producent.Siedziba
-                         select new {
-                             Producent = producent,
-                             Samochody = samochodGrupa
-                         } into wynik
-                         group wynik by wynik.Producent.Siedziba;
-
-            var query4 = producenci.GroupJoin(samochody, p => p.Nazwa, s => s.Producent,
-                (p, g) => new {
-                    Producent = p,
-                    Samochody = g
-                }).OrderBy(p => p.Producent.Siedziba)
-                .GroupBy(g => g.Producent.Siedziba);
-
-
-            foreach (var wynik in query2) {
-                Console.WriteLine($"{wynik.Nazwa} ");
-                Console.WriteLine($"  Max: {wynik.Max}");
-                Console.WriteLine($"  Min: {wynik.Min}");
-                Console.WriteLine($"  Avg: {wynik.Avg}");
+                foreach (var car in query) {
+                Console.WriteLine($"{car.Producent} : {car.Model}");
             }
+        }
+
+        private static void ZapytanieXML() {
+            var dokument = XDocument.Load("paliwo.xml");
+            var query = from element in dokument.Element("Samochody").Elements("Samochod")
+                        where element.Attribute("Producent").Value == "Ferrari"
+                        select element.Attribute("Model").Value;
+
+            foreach (var car in query) {
+                Console.WriteLine($"{car}");
+            }
+        }
+
+        private static void TworzenieXML() {
+
+            var rekordy = WczytywanieSamochodu("paliwo.csv");
+
+            var dokument = new XDocument();
+            var samochody = new XElement("Samochody",
+                from rekord in rekordy
+                select new XElement("Samochod",
+                    new XAttribute("Rok", rekord.Rok),
+                    new XAttribute("Producent", rekord.Producent),
+                    new XAttribute("Model", rekord.Model),
+                    new XAttribute("SpalanieAutostrada", rekord.SpalanieAutostrada),
+                    new XAttribute("SpalanieMiasto", rekord.SpalanieMiasto),
+                    new XAttribute("SpalanieMieszane", rekord.SpalanieMieszane)
+                )
+            );
+
+            #region wersjadluga
+            //foreach (var rekord in rekordy) {
+            //var samochod = new XElement("Samochod");
+
+            //var producent = new XAttribute("Producent", rekord.Producent);
+            //var model = new XAttribute("Model",rekord.Model);
+            //var spalanieAutostrada = new XAttribute("SpalanieAutostrada", rekord.SpalanieAutostrada);
+            //var spalanieMiasto = new XAttribute("SpalanieMiasto", rekord.SpalanieMiasto);
+
+            //var samochod = new XElement("Samochod", producent,model, spalanieAutostrada, spalanieMiasto); // funkcjonalna konstrukacja
+
+            //wersja skrocona od razu 
+            //var samochod = new XElement("Samochod",
+            //    new XAttribute("Producent", rekord.Producent),
+            //    new XAttribute("Model", rekord.Model),
+            //    new XAttribute("SpalanieAutostrada", rekord.SpalanieAutostrada),
+            //    new XAttribute("SpalanieMiasto", rekord.SpalanieMiasto),
+            //    new XAttribute("SpalanieMieszane", rekord.SpalanieMieszane)
+            //);
+
+            //samochod.Add(producent);
+            //samochod.Add(model);
+            //samochod.Add(spalanieAutostrada);
+            //samochod.Add(spalanieMiasto);
+
+            //    samochody.Add(samochod);
+            //}
+            #endregion 
+
+            dokument.Add(samochody);
+            dokument.Save("paliwo.xml");
         }
 
         private static List<Producent> WczytywanieProducenci(string path) {
