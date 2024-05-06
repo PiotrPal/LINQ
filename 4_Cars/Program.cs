@@ -11,16 +11,26 @@ namespace _4_Cars {
             var samochody = WczytywanieSamochodu("paliwo.csv");
             var producenci = WczytywanieProducenci("producent.csv");
 
-            var query = from samochod in samochody
-                        group samochod by samochod.Producent.ToUpper() into producent
-                        orderby producent.Key
-                        select producent;
+            var query = from car in samochody
+                        group car by car.Producent into samochodGrupa
+                        select new {
+                            Nazwa = samochodGrupa.Key,
+                            Max = samochodGrupa.Max(s => s.SpalanieAutostrada),
+                            Min = samochodGrupa.Min(s => s.SpalanieAutostrada),
+                            Avg = samochodGrupa.Average(s => s.SpalanieAutostrada)
+                        } into wynik
+                        orderby wynik.Max descending
+                        select wynik;
 
-            var query2 = samochody.GroupBy(s => s.Producent.ToUpper())
-                .OrderBy(g => g.Key);
-
-            //var query69 = samochody.Select(s => s.Producent);
-            //var query70 = samochody.GroupBy(s => s.Producent);
+            var query2 = samochody.GroupBy(s => s.Producent)
+                .Select(g => {
+                    return new {
+                        Nazwa = g.Key,
+                        Max = g.Max(s => s.SpalanieAutostrada),
+                        Min = g.Min(s => s.SpalanieAutostrada),
+                        Avg = g.Average(s => s.SpalanieAutostrada)
+                    };
+                }).OrderByDescending( g => g.Max);
 
             var query3 = from producent in producenci
                          join samochod in samochody
@@ -33,30 +43,19 @@ namespace _4_Cars {
                          group wynik by wynik.Producent.Siedziba;
 
             var query4 = producenci.GroupJoin(samochody, p => p.Nazwa, s => s.Producent,
-                (p,g) => new {
-                    Producent = p, 
+                (p, g) => new {
+                    Producent = p,
                     Samochody = g
-                }).OrderBy(p => p.Producent.Siedziba) 
+                }).OrderBy(p => p.Producent.Siedziba)
                 .GroupBy(g => g.Producent.Siedziba);
 
 
-            foreach (var grupa in query4) {
-                //Console.WriteLine($"{ item.Key } ma { item.Count() } samochodow");
-
-                Console.WriteLine($"{grupa.Key}");
-
-                foreach (var car in grupa.SelectMany(g => g.Samochody)
-                    .OrderByDescending(c => c.SpalanieAutostrada).Take(3)) {
-                    Console.WriteLine($"\t{car.Model} : {car.SpalanieAutostrada}");
-                }
+            foreach (var wynik in query2) {
+                Console.WriteLine($"{wynik.Nazwa} ");
+                Console.WriteLine($"  Max: {wynik.Max}");
+                Console.WriteLine($"  Min: {wynik.Min}");
+                Console.WriteLine($"  Avg: {wynik.Avg}");
             }
-
-            //foreach (var car in query70) {
-            //    Console.WriteLine(car.Key);
-            //}
-
-
-
         }
 
         private static List<Producent> WczytywanieProducenci(string path) {
