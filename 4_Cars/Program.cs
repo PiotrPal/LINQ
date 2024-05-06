@@ -13,16 +13,18 @@ namespace _4_Cars {
 
             var query = samochody
                 .Join(producenci,
-                    s => s.Producent,
-                    p => p.Nazwa,
-                    (s, p) => new {
-                        //p.Siedziba,   // wersja1
-                        //s.Model,
-                        //s.SpalanieAutostrada,
-                        //s.Producent,
-                        samochod = s,
-                        producent = p
-                    })
+                    //s => s.Producent,
+                    //p => p.Nazwa,
+                    s => new { s.Producent, s.Rok },
+                    p => new { Producent = p.Nazwa, p.Rok },
+            (s, p) => new {
+                //p.Siedziba,   // wersja1
+                //s.Model,
+                //s.SpalanieAutostrada,
+                //s.Producent,
+                samochod = s,
+                producent = p
+            })
                 .OrderByDescending(x => x.samochod.SpalanieAutostrada)
                 .ThenBy(x => x.samochod.Producent)
                 .Select(x => new { // wersja2
@@ -31,10 +33,12 @@ namespace _4_Cars {
                     x.samochod.Model,
                     x.samochod.SpalanieAutostrada
                 });
-                //.Select(x => new { x.Siedziba, x.Producent, x.Model, x.SpalanieAutostrada }); // wersja1
+            //.Select(x => new { x.Siedziba, x.Producent, x.Model, x.SpalanieAutostrada }); // wersja1
 
             var query2 = from samochod in samochody
-                         join producent in producenci on samochod.Producent equals producent.Nazwa
+                         join producent in producenci
+                         on new { samochod.Producent, samochod.Rok }
+                         equals new { Producent = producent.Nazwa, producent.Rok }
                          orderby samochod.SpalanieAutostrada descending, samochod.Producent ascending
                          select new {
                              producent.Siedziba,
@@ -44,7 +48,6 @@ namespace _4_Cars {
                          };
 
             foreach (var car in query.Take(10)) {
-
                 // Console.WriteLine(car.Producent + " " + car.Siedziba + " " + car.Model + " " + car.SpalanieAutostrada); // wersja 1
                 //Console.WriteLine(car.producent.Siedziba, car.samochod.Model, car.samochod.Producent, car.samochod.SpalanieAutostrada); // bez selecta
                 Console.WriteLine(car.Siedziba + " " + car.Model + " " + car.Producent + " " + car.SpalanieAutostrada); // wersja 2
