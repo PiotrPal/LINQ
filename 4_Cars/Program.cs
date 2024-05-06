@@ -17,25 +17,31 @@ namespace _4_Cars {
         }
 
         private static void ZapytanieXML2() {
+            XNamespace ns = "http://dev-hobby.pl/Samochody/2018";
+            XNamespace ex = "http://dev-hobby.pl/Samochody/2018/ex";
+
             var dokument = XDocument.Load("paliwo.xml");
-            var query = dokument
+            var query = (dokument
                 //.Descendants("Samochod") 
-                .Element("Samochody")
-                .Elements("Samochod")
+                .Element(ns + "Samochody")?
+                .Elements(ex + "Samochod") ?? Enumerable.Empty<XElement>()) // <- jak nie znajdzie to zrboi pusty XElement a nie wywali wyjatek
                 .Where(s => s.Attribute("Producent")?.Value == "Ferrari") //? <- bezpieczneij bo nie wywali wyjatku
                 .Select(s => new {
                     Model = s.Attribute("Model").Value,
                     Producent = s.Attribute("Producent").Value
                 });
 
-                foreach (var car in query) {
+            foreach (var car in query) {
                 Console.WriteLine($"{car.Producent} : {car.Model}");
             }
         }
 
         private static void ZapytanieXML() {
+            XNamespace ns = "http://dev-hobby.pl/Samochody/2018";
+            XNamespace ex = "http://dev-hobby.pl/Samochody/2018/ex";
+
             var dokument = XDocument.Load("paliwo.xml");
-            var query = from element in dokument.Element("Samochody").Elements("Samochod")
+            var query = from element in dokument.Element(ns + "Samochody").Elements(ex + "Samochod")
                         where element.Attribute("Producent").Value == "Ferrari"
                         select element.Attribute("Model").Value;
 
@@ -45,13 +51,15 @@ namespace _4_Cars {
         }
 
         private static void TworzenieXML() {
+            XNamespace ns = "http://dev-hobby.pl/Samochody/2018";
+            XNamespace ex = "http://dev-hobby.pl/Samochody/2018/ex";
 
             var rekordy = WczytywanieSamochodu("paliwo.csv");
 
             var dokument = new XDocument();
-            var samochody = new XElement("Samochody",
+            var samochody = new XElement(ns + "Samochody",
                 from rekord in rekordy
-                select new XElement("Samochod",
+                select new XElement(ex + "Samochod",
                     new XAttribute("Rok", rekord.Rok),
                     new XAttribute("Producent", rekord.Producent),
                     new XAttribute("Model", rekord.Model),
@@ -89,6 +97,8 @@ namespace _4_Cars {
             //    samochody.Add(samochod);
             //}
             #endregion 
+
+            samochody.Add(new XAttribute(XNamespace.Xmlns + "ex", ex)); //ex: <- prefix zeby bylo krocej
 
             dokument.Add(samochody);
             dokument.Save("paliwo.xml");
