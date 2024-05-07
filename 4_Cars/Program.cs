@@ -13,17 +13,17 @@ namespace _4_Cars {
     class Program {
         static void Main(string[] args) {
 
-            Func<int, int> potegowanie = x => x * x;
-            Expression<Func<int, int, int>> dodawanie = (x, y) => x + y;
+            //Func<int, int> potegowanie = x => x * x;
+            //Expression<Func<int, int, int>> dodawanie = (x, y) => x + y;
 
-            var wynik = dodawanie.Compile()(4, 2);
-            Console.WriteLine("WYNIK: " + wynik);
-            Console.WriteLine("DODAWANIE: " + dodawanie);
-            Console.WriteLine("POTEGOWANIE: " + potegowanie);
+            //var wynik = dodawanie.Compile()(4, 2);
+            //Console.WriteLine("WYNIK: " + wynik);
+            //Console.WriteLine("DODAWANIE: " + dodawanie);
+            //Console.WriteLine("POTEGOWANIE: " + potegowanie);
 
-            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SamochodDB>());//w rwazie zmeny usunie stara baze i zrobi nowa (urposzczenie na potrzeby projektu)
-            //WstawDane();
-            //ZapytanieDane();
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SamochodDB>());//w rwazie zmeny usunie stara baze i zrobi nowa (urposzczenie na potrzeby projektu)
+            WstawDane();
+            ZapytanieDane();
         }
 
         private static void ZapytanieDane() {
@@ -34,14 +34,31 @@ namespace _4_Cars {
                         orderby samochod.SpalanieAutostrada descending, samochod.Model ascending
                         select samochod;
 
-            var query2 = db.Samochody.OrderByDescending(s => s.SpalanieAutostrada).ThenBy(s => s.Model);
+            var query2 = db.Samochody.GroupBy(s => s.Producent)
+                .Select(g => new {
+                    Model = g.Key,
+                    Samochody = g.OrderByDescending(s => s.SpalanieAutostrada).Take(2)
+                });
 
-            var query3 = db.Samochody.Where(s => s.Producent == "Audi")
-                .OrderByDescending(s => s.SpalanieAutostrada).ThenBy(s => s.Model);
+            var query3 = db.Samochody
+                .Where(s => s.Producent == "Audi")
+                .OrderByDescending(s => s.SpalanieAutostrada)
+                .ThenBy(s => s.Model)
+                .Take(10)
+                .ToList();
 
-            foreach (var car in query3.Take(10)) {
-                Console.WriteLine($"{car.Model} : {car.SpalanieAutostrada} | {car.Producent}");
+            //Console.WriteLine(query3.Count());
+
+            foreach(var grupa in query2) {
+                Console.WriteLine(grupa.Model);
+                foreach (var car in grupa.Samochody) {
+                    Console.WriteLine($"\t{car.Model} : {car.SpalanieAutostrada}");
+                }
             }
+
+            //foreach (var car in query2) {
+            //    Console.WriteLine($"{car.Model} : {car.SpalanieAutostrada} | {car.Producent}");
+            //}
         }
 
         private static void WstawDane() {
