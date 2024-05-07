@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +12,18 @@ using System.Xml.Linq;
 namespace _4_Cars {
     class Program {
         static void Main(string[] args) {
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SamochodDB>());//w rwazie zmeny usunie stara baze i zrobi nowa (urposzczenie na potrzeby projektu)
-            WstawDane();
-            ZapytanieDane();
+
+            Func<int, int> potegowanie = x => x * x;
+            Expression<Func<int, int, int>> dodawanie = (x, y) => x + y;
+
+            var wynik = dodawanie.Compile()(4, 2);
+            Console.WriteLine("WYNIK: " + wynik);
+            Console.WriteLine("DODAWANIE: " + dodawanie);
+            Console.WriteLine("POTEGOWANIE: " + potegowanie);
+
+            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SamochodDB>());//w rwazie zmeny usunie stara baze i zrobi nowa (urposzczenie na potrzeby projektu)
+            //WstawDane();
+            //ZapytanieDane();
         }
 
         private static void ZapytanieDane() {
@@ -21,13 +31,16 @@ namespace _4_Cars {
             db.Database.Log = Console.WriteLine;
 
             var query = from samochod in db.Samochody
-                         orderby samochod.SpalanieAutostrada descending, samochod.Model ascending
-                         select samochod;
+                        orderby samochod.SpalanieAutostrada descending, samochod.Model ascending
+                        select samochod;
 
             var query2 = db.Samochody.OrderByDescending(s => s.SpalanieAutostrada).ThenBy(s => s.Model);
 
-            foreach (var car in query2.Take(10)) {
-                Console.WriteLine($"{car.Model} : {car.SpalanieAutostrada}");
+            var query3 = db.Samochody.Where(s => s.Producent == "Audi")
+                .OrderByDescending(s => s.SpalanieAutostrada).ThenBy(s => s.Model);
+
+            foreach (var car in query3.Take(10)) {
+                Console.WriteLine($"{car.Model} : {car.SpalanieAutostrada} | {car.Producent}");
             }
         }
 
