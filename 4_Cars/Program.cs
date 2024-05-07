@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,10 +11,38 @@ using System.Xml.Linq;
 namespace _4_Cars {
     class Program {
         static void Main(string[] args) {
-            TworzenieXML();
-            ZapytanieXML();
-            Console.WriteLine("\t -----");
-            ZapytanieXML2();
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<SamochodDB>());//w rwazie zmeny usunie stara baze i zrobi nowa (urposzczenie na potrzeby projektu)
+            WstawDane();
+            ZapytanieDane();
+        }
+
+        private static void ZapytanieDane() {
+            var db = new SamochodDB();
+            db.Database.Log = Console.WriteLine;
+
+            var query = from samochod in db.Samochody
+                         orderby samochod.SpalanieAutostrada descending, samochod.Model ascending
+                         select samochod;
+
+            var query2 = db.Samochody.OrderByDescending(s => s.SpalanieAutostrada).ThenBy(s => s.Model);
+
+            foreach (var car in query2.Take(10)) {
+                Console.WriteLine($"{car.Model} : {car.SpalanieAutostrada}");
+            }
+        }
+
+        private static void WstawDane() {
+            var samochody = WczytywanieSamochodu("paliwo.csv");
+            var db = new SamochodDB();
+            db.Database.Log = Console.WriteLine;
+
+            if (!db.Samochody.Any()) {
+                foreach (var car in samochody) {
+                    db.Samochody.Add(car);
+                }
+                db.SaveChanges();
+            }
+
         }
 
         private static void ZapytanieXML2() {
